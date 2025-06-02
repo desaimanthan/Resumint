@@ -7,6 +7,8 @@ const connectDB = require('./config/database');
 
 // Import routes
 const authRoutes = require('./routes/auth');
+const resumeRoutes = require('./routes/resume');
+const companiesRoutes = require('./routes/companies');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -23,7 +25,7 @@ app.use(cors({
     ? ['https://your-production-domain.com'] 
     : ['http://localhost:3000'],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
@@ -50,6 +52,8 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api/auth', authRoutes);
+app.use('/api/resumes', resumeRoutes);
+app.use('/api/companies', companiesRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
