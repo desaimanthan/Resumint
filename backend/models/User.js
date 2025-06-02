@@ -57,6 +57,20 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['user', 'admin'],
     default: 'user'
+  },
+  
+  // AI Usage Statistics
+  aiUsageStats: {
+    totalTokensUsed: { type: Number, default: 0 },
+    pdfParsingTokens: { type: Number, default: 0 },
+    optimizationTokens: { type: Number, default: 0 },
+    resumesParsed: { type: Number, default: 0 },
+    lastResetDate: { type: Date, default: Date.now },
+    monthlyUsage: [{
+      month: { type: String }, // YYYY-MM format
+      tokens: { type: Number, default: 0 },
+      operations: { type: Number, default: 0 }
+    }]
   }
 }, {
   timestamps: true

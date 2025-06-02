@@ -9,6 +9,7 @@ const connectDB = require('./config/database');
 const authRoutes = require('./routes/auth');
 const resumeRoutes = require('./routes/resume');
 const companiesRoutes = require('./routes/companies');
+const aiRoutes = require('./routes/ai');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -30,8 +31,8 @@ app.use(cors({
 }));
 
 // Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '35mb' }));
+app.use(express.urlencoded({ extended: true, limit: '35mb' }));
 app.use(cookieParser());
 
 // Request logging middleware
@@ -54,6 +55,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/resumes', resumeRoutes);
 app.use('/api/companies', companiesRoutes);
+app.use('/api/ai', aiRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {

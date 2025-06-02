@@ -54,12 +54,13 @@ router.get('/:id', authenticateToken, async (req, res) => {
 // Create a new resume
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    const { title = 'My Resume' } = req.body;
+    const { title = 'My Resume', creationMethod = 'scratch' } = req.body;
 
     // Initialize with user's basic info from their account
     const resumeData = {
       userId: req.user.id,
       title,
+      creationMethod,
       personalInfo: {
         firstName: req.user.firstName || '',
         lastName: req.user.lastName || '',
@@ -78,6 +79,11 @@ router.post('/', authenticateToken, async (req, res) => {
         volunteerWork: [],
         publications: [],
         hobbies: []
+      },
+      aiUsage: {
+        pdfParsingTokens: 0,
+        optimizationTokens: 0,
+        totalTokens: 0
       }
     };
 

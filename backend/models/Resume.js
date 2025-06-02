@@ -47,7 +47,6 @@ const resumeSchema = new mongoose.Schema({
   education: [{
     degreeLevel: { 
       type: String, 
-      enum: ['High School', 'Associate', 'Bachelor', 'Master', 'PhD', 'Certificate', 'Diploma'],
       trim: true
     },
     institution: { type: String, trim: true },
@@ -74,7 +73,7 @@ const resumeSchema = new mongoose.Schema({
     skillName: { type: String, trim: true },
     category: { 
       type: String, 
-      enum: ['Technical', 'Soft', 'Language', 'Other'],
+      trim: true,
       default: 'Technical'
     }
   }],
@@ -134,7 +133,28 @@ const resumeSchema = new mongoose.Schema({
   lastSaved: { type: Date, default: Date.now },
   completionPercentage: { type: Number, default: 0, min: 0, max: 100 },
   templateId: { type: String, default: 'default' },
-  title: { type: String, trim: true, default: 'My Resume' }
+  title: { type: String, trim: true, default: 'My Resume' },
+  
+  // Creation method and AI usage tracking
+  creationMethod: {
+    type: String,
+    enum: ['scratch', 'pdf_upload'],
+    default: 'scratch'
+  },
+  aiUsage: {
+    pdfParsingTokens: { type: Number, default: 0 },
+    optimizationTokens: { type: Number, default: 0 },
+    totalTokens: { type: Number, default: 0 },
+    lastUpdated: { type: Date }
+  },
+  pdfParsingMetadata: {
+    fileName: { type: String, trim: true },
+    fileSize: { type: Number },
+    pageCount: { type: Number },
+    processingTime: { type: Number },
+    claudeModel: { type: String, trim: true },
+    parsedAt: { type: Date }
+  }
   
 }, { 
   timestamps: true,
