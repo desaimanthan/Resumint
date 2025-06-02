@@ -14,30 +14,26 @@ const resumeSchema = new mongoose.Schema({
     lastName: { type: String, trim: true },
     email: { type: String, trim: true, lowercase: true },
     phone: { type: String, trim: true },
-    location: {
-      city: { type: String, trim: true },
-      state: { type: String, trim: true },
-      country: { type: String, trim: true }
-    },
-    linkedIn: { type: String, trim: true },
-    portfolio: { type: String, trim: true },
+    location: { type: mongoose.Schema.Types.Mixed }, // Can be string or object
+    linkedin: { type: String, trim: true },
+    website: { type: String, trim: true },
     github: { type: String, trim: true },
     profilePhoto: { type: String, trim: true }
   },
 
   // Work History
   workHistory: [{
-    jobTitle: { type: String, required: true, trim: true },
-    companyName: { type: String, required: true, trim: true },
+    jobTitle: { type: String, trim: true },
+    company: { type: String, trim: true },
     companyLogo: { type: String, trim: true },
     companyDomain: { type: String, trim: true },
-    startDate: { type: Date, required: true },
+    startDate: { type: Date },
     endDate: { type: Date },
-    isCurrentRole: { type: Boolean, default: false },
+    isCurrentJob: { type: Boolean, default: false },
     responsibilities: [{ type: String, trim: true }],
     achievements: [{
       description: { type: String, trim: true },
-      metric: { type: String, trim: true }
+      impact: { type: String, trim: true }
     }],
     technologies: [{ type: String, trim: true }],
     location: { type: String, trim: true }
@@ -45,16 +41,15 @@ const resumeSchema = new mongoose.Schema({
 
   // Education
   education: [{
-    degreeLevel: { 
+    degree: { 
       type: String, 
       trim: true
     },
     institution: { type: String, trim: true },
-    fieldOfStudy: { type: String, trim: true },
-    startDate: { type: Date },
-    endDate: { type: Date },
-    gpa: { type: Number, min: 0, max: 4.0 },
-    honors: { type: String, trim: true },
+    location: { type: String, trim: true },
+    graduationDate: { type: Date },
+    gpa: { type: String, trim: true },
+    honors: [{ type: String, trim: true }],
     relevantCoursework: [{ type: String, trim: true }]
   }],
 
@@ -62,7 +57,7 @@ const resumeSchema = new mongoose.Schema({
   certifications: [{
     name: { type: String, trim: true },
     issuer: { type: String, trim: true },
-    dateObtained: { type: Date },
+    dateEarned: { type: Date },
     expirationDate: { type: Date },
     credentialId: { type: String, trim: true },
     verificationUrl: { type: String, trim: true }
@@ -80,15 +75,15 @@ const resumeSchema = new mongoose.Schema({
 
   // Projects
   projects: [{
-    projectName: { type: String, trim: true },
+    name: { type: String, trim: true },
     role: { type: String, trim: true },
     startDate: { type: Date },
     endDate: { type: Date },
     description: { type: String, trim: true },
     technologies: [{ type: String, trim: true }],
     outcome: { type: String, trim: true },
-    projectUrl: { type: String, trim: true },
-    githubUrl: { type: String, trim: true }
+    url: { type: String, trim: true },
+    github: { type: String, trim: true }
   }],
 
   // Other Achievements
@@ -154,6 +149,27 @@ const resumeSchema = new mongoose.Schema({
     processingTime: { type: Number },
     claudeModel: { type: String, trim: true },
     parsedAt: { type: Date }
+  },
+
+  // Publication settings
+  publication: {
+    isPublished: { type: Boolean, default: false },
+    subdomain: { type: String, trim: true, lowercase: true, unique: true, sparse: true },
+    customDomain: { type: String, trim: true, lowercase: true },
+    isPasswordProtected: { type: Boolean, default: false },
+    password: { type: String }, // hashed password
+    publishedAt: { type: Date },
+    seoMetadata: {
+      title: { type: String, trim: true },
+      description: { type: String, trim: true, maxlength: 160 },
+      keywords: [{ type: String, trim: true }],
+      ogImage: { type: String, trim: true }
+    },
+    analytics: {
+      totalViews: { type: Number, default: 0 },
+      uniqueVisitors: { type: Number, default: 0 },
+      lastViewed: { type: Date }
+    }
   }
   
 }, { 

@@ -8,6 +8,7 @@ const LoginHistory = require('../models/LoginHistory');
 const { generateTokens, verifyRefreshToken } = require('../utils/jwt');
 const { authenticateToken } = require('../middleware/auth');
 const { uploadToS3, deleteFromS3, listS3Files } = require('../config/s3');
+const tokenMonitor = require('../utils/token-monitor');
 
 const router = express.Router();
 
@@ -19,6 +20,18 @@ const authLimiter = rateLimit({
     success: false,
     message: 'Too many authentication attempts, please try again later.'
   }
+});
+
+// Rate limiting specifically for refresh token endpoint
+const refreshTokenLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // limit each IP to 10 refresh requests per minute
+  message: {
+    success: false,
+    message: 'Too many token refresh attempts, please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 // Validation rules
@@ -202,8 +215,19 @@ router.post('/login', authLimiter, loginValidation, async (req, res) => {
 // @route   POST /api/auth/refresh-token
 // @desc    Refresh access token
 // @access  Public
-router.post('/refresh-token', async (req, res) => {
+router.post('/refresh-token', refreshTokenLimiter, async (req, res) => {
   try {
+    // Log refresh attempt for monitoring
+    const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
+    const userAgent = req.get('User-Agent') || 'unknown';
+    const attemptCount = tokenMonitor.logRefreshAttempt(clientIP, userAgent);
+    
+    // Additional protection: if too many attempts from same IP, add delay
+    if (attemptCount > 8) {
+      console.warn(`🚨 Excessive refresh attempts from ${clientIP}: ${attemptCount}`);
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
+    }
+
     const { refreshToken } = req.cookies;
 
     if (!refreshToken) {
@@ -635,6 +659,38 @@ router.delete('/account', authenticateToken, [
     });
   } catch (error) {
     console.error('Delete account error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
+
+// @route   GET /api/auth/token-monitor-stats
+// @desc    Get token refresh monitoring stats (admin only)
+// @access  Private
+router.get('/token-monitor-stats', authenticateToken, (req, res) => {
+  try {
+    // Simple admin check - you can enhance this based on your user roles
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin privileges required.'
+      });
+    }
+
+    const stats = tokenMonitor.getStats();
+    const recentActivity = tokenMonitor.analyzeRecentActivity(10); // Last 10 minutes
+
+    res.json({
+      success: true,
+      data: {
+        currentStats: stats,
+        recentActivity
+      }
+    });
+  } catch (error) {
+    console.error('Token monitor stats error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'

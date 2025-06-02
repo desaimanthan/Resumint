@@ -1,4 +1,4 @@
-require('dotenv').config({ path: '../.env' });
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -10,6 +10,7 @@ const authRoutes = require('./routes/auth');
 const resumeRoutes = require('./routes/resume');
 const companiesRoutes = require('./routes/companies');
 const aiRoutes = require('./routes/ai');
+const publishedRoutes = require('./routes/published');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -20,11 +21,14 @@ connectDB();
 // Security middleware
 app.use(helmet());
 
-// CORS configuration
+// CORS configuration - Fixed frontend port
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
     ? ['https://your-production-domain.com'] 
-    : ['http://localhost:3000'],
+    : [
+        'http://localhost:8080',  // Fixed frontend port
+        /^http:\/\/.*\.localhost:8080$/  // Allow any subdomain of localhost:8080
+      ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -56,6 +60,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/resumes', resumeRoutes);
 app.use('/api/companies', companiesRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/published', publishedRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {

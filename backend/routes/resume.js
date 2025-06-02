@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const Resume = require('../models/Resume');
+const Analytics = require('../models/Analytics');
+const bcrypt = require('bcrypt');
 const { authenticateToken } = require('../middleware/auth');
 
 // Get all resumes for the authenticated user
@@ -381,6 +383,365 @@ router.get('/:id/analytics', authenticateToken, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch resume analytics'
+    });
+  }
+});
+
+// Helper function to generate subdomain from title
+function generateSubdomain(title) {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Replace multiple hyphens with single
+    .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+}
+
+// Check subdomain availability
+router.get('/:id/check-subdomain/:subdomain', authenticateToken, async (req, res) => {
+  try {
+    const { subdomain } = req.params;
+    const { id } = req.params;
+    
+    // Check if subdomain is already taken by another resume
+    const existingResume = await Resume.findOne({ 
+      'publication.subdomain': subdomain,
+      _id: { $ne: id } // Exclude current resume
+    });
+    
+    res.json({
+      success: true,
+      data: { 
+        available: !existingResume,
+        subdomain 
+      }
+    });
+  } catch (error) {
+    console.error('Error checking subdomain availability:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to check subdomain availability'
+    });
+  }
+});
+
+// Get publication status
+router.get('/:id/publication-status', authenticateToken, async (req, res) => {
+  try {
+    console.log('🔍 Fetching publication status for resume ID:', req.params.id, 'User ID:', req.user.id);
+    
+    const resume = await Resume.findOne({ 
+      _id: req.params.id, 
+      userId: req.user.id 
+    }).select('publication title');
+
+    if (!resume) {
+      console.log('❌ Resume not found for ID:', req.params.id);
+      return res.status(404).json({
+        success: false,
+        message: 'Resume not found'
+      });
+    }
+
+    console.log('📊 Resume found, publication data:', resume.publication);
+    console.log('📝 Resume title:', resume.title);
+
+    const responseData = {
+      success: true,
+      data: { 
+        publication: resume.publication,
+        suggestedSubdomain: generateSubdomain(resume.title)
+      }
+    };
+
+    console.log('📤 Sending response:', responseData);
+    res.json(responseData);
+  } catch (error) {
+    console.error('💥 Error fetching publication status:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch publication status'
+    });
+  }
+});
+
+// Publish resume
+router.post('/:id/publish', authenticateToken, async (req, res) => {
+  try {
+    console.log('🚀 Publishing resume ID:', req.params.id, 'for user:', req.user.id);
+    console.log('📝 Publish request body:', req.body);
+    
+    const { 
+      subdomain, 
+      isPasswordProtected = false, 
+      password = null,
+      seoMetadata = {} 
+    } = req.body;
+
+    const resume = await Resume.findOne({ 
+      _id: req.params.id, 
+      userId: req.user.id 
+    });
+
+    if (!resume) {
+      console.log('❌ Resume not found for publishing');
+      return res.status(404).json({
+        success: false,
+        message: 'Resume not found'
+      });
+    }
+
+    console.log('📊 Resume found, current publication status:', resume.publication);
+
+    // Clean up data before publishing
+    // Filter out incomplete work history entries
+    if (resume.workHistory) {
+      resume.workHistory = resume.workHistory.filter(job => 
+        job.jobTitle && job.jobTitle.trim() && 
+        job.company && job.company.trim()
+      );
+    }
+
+    // Convert location object to string if needed
+    if (resume.personalInfo.location && typeof resume.personalInfo.location === 'object') {
+      const loc = resume.personalInfo.location;
+      if (loc.city || loc.state || loc.country) {
+        resume.personalInfo.location = [loc.city, loc.state, loc.country]
+          .filter(Boolean)
+          .join(', ');
+      } else {
+        resume.personalInfo.location = '';
+      }
+    }
+
+    // Check if subdomain is available
+    const existingResume = await Resume.findOne({ 
+      'publication.subdomain': subdomain,
+      _id: { $ne: req.params.id }
+    });
+
+    if (existingResume) {
+      return res.status(400).json({
+        success: false,
+        message: 'Subdomain is already taken'
+      });
+    }
+
+    // Hash password if provided
+    let hashedPassword = null;
+    if (isPasswordProtected && password) {
+      hashedPassword = await bcrypt.hash(password, 10);
+    }
+
+    // Auto-generate SEO metadata if not provided
+    const autoSeoMetadata = {
+      title: seoMetadata.title || `${resume.personalInfo.firstName} ${resume.personalInfo.lastName} - Resume`,
+      description: seoMetadata.description || resume.summary?.substring(0, 160) || `Professional resume of ${resume.personalInfo.firstName} ${resume.personalInfo.lastName}`,
+      keywords: seoMetadata.keywords || resume.skills.map(skill => skill.skillName).slice(0, 10),
+      ogImage: seoMetadata.ogImage || resume.personalInfo.profilePhoto
+    };
+
+    // Update publication settings
+    resume.publication = {
+      isPublished: true,
+      subdomain,
+      isPasswordProtected,
+      password: hashedPassword,
+      publishedAt: new Date(),
+      seoMetadata: autoSeoMetadata,
+      analytics: {
+        totalViews: 0,
+        uniqueVisitors: 0,
+        lastViewed: null
+      }
+    };
+
+    console.log('💾 Saving resume with publication data:', resume.publication);
+    await resume.save();
+    console.log('✅ Resume saved successfully');
+
+    // Verify the save worked by fetching the resume again
+    const savedResume = await Resume.findById(req.params.id).select('publication');
+    console.log('🔍 Verification - saved publication data:', savedResume.publication);
+
+    const responseData = {
+      success: true,
+      data: { 
+        publication: resume.publication,
+        url: `${subdomain}.${process.env.DOMAIN || 'localhost'}`
+      }
+    };
+
+    console.log('📤 Sending publish response:', responseData);
+    res.json(responseData);
+  } catch (error) {
+    console.error('Error publishing resume:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to publish resume'
+    });
+  }
+});
+
+// Update publication settings
+router.put('/:id/publication-settings', authenticateToken, async (req, res) => {
+  try {
+    const { 
+      subdomain, 
+      isPasswordProtected, 
+      password,
+      seoMetadata 
+    } = req.body;
+
+    const resume = await Resume.findOne({ 
+      _id: req.params.id, 
+      userId: req.user.id 
+    });
+
+    if (!resume) {
+      return res.status(404).json({
+        success: false,
+        message: 'Resume not found'
+      });
+    }
+
+    if (!resume.publication.isPublished) {
+      return res.status(400).json({
+        success: false,
+        message: 'Resume is not published'
+      });
+    }
+
+    // Check subdomain availability if changed
+    if (subdomain && subdomain !== resume.publication.subdomain) {
+      const existingResume = await Resume.findOne({ 
+        'publication.subdomain': subdomain,
+        _id: { $ne: req.params.id }
+      });
+
+      if (existingResume) {
+        return res.status(400).json({
+          success: false,
+          message: 'Subdomain is already taken'
+        });
+      }
+      resume.publication.subdomain = subdomain;
+    }
+
+    // Update password if provided
+    if (isPasswordProtected !== undefined) {
+      resume.publication.isPasswordProtected = isPasswordProtected;
+      if (isPasswordProtected && password) {
+        resume.publication.password = await bcrypt.hash(password, 10);
+      } else if (!isPasswordProtected) {
+        resume.publication.password = null;
+      }
+    }
+
+    // Update SEO metadata
+    if (seoMetadata) {
+      resume.publication.seoMetadata = {
+        ...resume.publication.seoMetadata,
+        ...seoMetadata
+      };
+    }
+
+    await resume.save();
+
+    res.json({
+      success: true,
+      data: { publication: resume.publication }
+    });
+  } catch (error) {
+    console.error('Error updating publication settings:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update publication settings'
+    });
+  }
+});
+
+// Unpublish resume
+router.delete('/:id/unpublish', authenticateToken, async (req, res) => {
+  try {
+    const resume = await Resume.findOne({ 
+      _id: req.params.id, 
+      userId: req.user.id 
+    });
+
+    if (!resume) {
+      return res.status(404).json({
+        success: false,
+        message: 'Resume not found'
+      });
+    }
+
+    resume.publication.isPublished = false;
+    resume.publication.subdomain = null;
+    resume.publication.publishedAt = null;
+    
+    await resume.save();
+
+    res.json({
+      success: true,
+      message: 'Resume unpublished successfully'
+    });
+  } catch (error) {
+    console.error('Error unpublishing resume:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to unpublish resume'
+    });
+  }
+});
+
+// Get detailed analytics for published resume
+router.get('/:id/publication-analytics', authenticateToken, async (req, res) => {
+  try {
+    const { days = 30 } = req.query;
+    
+    const resume = await Resume.findOne({ 
+      _id: req.params.id, 
+      userId: req.user.id 
+    });
+
+    if (!resume) {
+      return res.status(404).json({
+        success: false,
+        message: 'Resume not found'
+      });
+    }
+
+    if (!resume.publication.isPublished) {
+      return res.status(400).json({
+        success: false,
+        message: 'Resume is not published'
+      });
+    }
+
+    // Get analytics summary
+    const summary = await Analytics.getAnalyticsSummary(req.params.id, parseInt(days));
+    
+    // Get daily analytics for charts
+    const dailyAnalytics = await Analytics.getDailyAnalytics(req.params.id, parseInt(days));
+    
+    // Get geographic distribution
+    const geographicData = await Analytics.getGeographicDistribution(req.params.id, parseInt(days));
+
+    res.json({
+      success: true,
+      data: {
+        summary,
+        dailyAnalytics,
+        geographicData,
+        publication: resume.publication
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching publication analytics:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch publication analytics'
     });
   }
 });
