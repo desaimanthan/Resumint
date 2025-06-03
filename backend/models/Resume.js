@@ -126,7 +126,7 @@ const resumeSchema = new mongoose.Schema({
   // Metadata
   isDraft: { type: Boolean, default: true },
   lastSaved: { type: Date, default: Date.now },
-  templateId: { type: String, default: 'default' },
+  templateId: { type: String, default: 'template-1' },
   title: { type: String, trim: true, default: 'My Resume' },
   
   // Creation method and AI usage tracking

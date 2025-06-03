@@ -496,7 +496,7 @@ router.post('/:id/publish', authenticateToken, async (req, res) => {
     if (resume.workHistory) {
       resume.workHistory = resume.workHistory.filter(job => 
         job.jobTitle && job.jobTitle.trim() && 
-        job.company && job.company.trim()
+        job.companyName && job.companyName.trim()
       );
     }
 
