@@ -92,7 +92,7 @@ router.post('/signup', authLimiter, signupValidation, async (req, res) => {
 
     await user.save();
 
-    // Generate tokens
+    // Generate tokens (signup doesn't have rememberMe, so use default)
     const { accessToken, refreshToken } = generateTokens(user._id);
 
     // Set refresh token as HTTP-only cookie
@@ -134,7 +134,7 @@ router.post('/login', authLimiter, loginValidation, async (req, res) => {
       });
     }
 
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
 
     // Find user by email
     const user = await User.findOne({ email });
@@ -184,15 +184,18 @@ router.post('/login', authLimiter, loginValidation, async (req, res) => {
       // Don't fail login if history saving fails
     }
 
-    // Generate tokens
-    const { accessToken, refreshToken } = generateTokens(user._id);
+    // Generate tokens with rememberMe consideration
+    const { accessToken, refreshToken, refreshTokenExpiry } = generateTokens(user._id, rememberMe);
+
+    // Calculate cookie maxAge based on rememberMe
+    const cookieMaxAge = rememberMe ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000; // 30 days or 7 days
 
     // Set refresh token as HTTP-only cookie
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      maxAge: cookieMaxAge
     });
 
     res.json({

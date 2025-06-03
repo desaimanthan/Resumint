@@ -24,7 +24,7 @@ const resumeSchema = new mongoose.Schema({
   // Work History
   workHistory: [{
     jobTitle: { type: String, trim: true },
-    company: { type: String, trim: true },
+    companyName: { type: String, trim: true },
     companyLogo: { type: String, trim: true },
     companyDomain: { type: String, trim: true },
     startDate: { type: Date },
