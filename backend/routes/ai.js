@@ -30,7 +30,7 @@ const upload = multer({
 
 // Token cost calculation
 const TOKEN_COSTS = {
-  'claude-3-5-sonnet-20241022': {
+  'claude-3-7-sonnet-20250219': {
     input: 0.003 / 1000,  // $0.003 per 1K input tokens
     output: 0.015 / 1000  // $0.015 per 1K output tokens
   },
@@ -41,7 +41,7 @@ const TOKEN_COSTS = {
 };
 
 function calculateCost(inputTokens, outputTokens, model) {
-  const rates = TOKEN_COSTS[model] || TOKEN_COSTS['claude-3-5-sonnet-20241022'];
+  const rates = TOKEN_COSTS[model] || TOKEN_COSTS['claude-3-7-sonnet-20250219'];
   return (inputTokens * rates.input) + (outputTokens * rates.output);
 }
 
@@ -66,14 +66,14 @@ function parseDate(dateString) {
 // Log AI usage
 async function logAIUsage(userId, resumeId, operation, tokenData, metadata) {
   try {
-    const cost = calculateCost(tokenData.inputTokens, tokenData.outputTokens, metadata.claudeModel || 'claude-3-5-sonnet-20241022');
+    const cost = calculateCost(tokenData.inputTokens, tokenData.outputTokens, metadata.claudeModel || 'claude-3-7-sonnet-20250219');
     
     // Create usage log entry
     const usageLog = new AIUsageLog({
       userId,
       resumeId,
       operation,
-      model: metadata.claudeModel || 'claude-3-5-sonnet-20241022',
+      model: metadata.claudeModel || 'claude-3-7-sonnet-20250219',
       inputTokens: tokenData.inputTokens,
       outputTokens: tokenData.outputTokens,
       totalTokens: tokenData.inputTokens + tokenData.outputTokens,
@@ -239,7 +239,7 @@ Create a compelling 2-3 sentence professional summary that incorporates these ke
 
     // Call Claude API
     const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-3-7-sonnet-20250219',
       max_tokens: 120,
       system: systemPrompt,
       messages: [
@@ -274,7 +274,7 @@ Create a compelling 2-3 sentence professional summary that incorporates these ke
       tokenUsage,
       {
         keywords: keywords,
-        claudeModel: "claude-3-5-sonnet-20241022",
+        claudeModel: "claude-3-7-sonnet-20250219",
         success: true,
         summaryLength: generatedSummary.length
       }
@@ -416,7 +416,7 @@ Return ONLY valid JSON in this exact structure:`;
 
     // Call Claude API with PDF
     const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-3-7-sonnet-20250219',
       max_tokens: 4000,
       system: systemPrompt,
       messages: [{
@@ -512,7 +512,7 @@ Return ONLY valid JSON in this exact structure:`;
       fileSize: req.file.size,
       pageCount: 1, // We can't easily determine page count from buffer
       processingTime,
-      claudeModel: 'claude-3-5-sonnet-20241022',
+      claudeModel: 'claude-3-7-sonnet-20250219',
       parsedAt: new Date()
     };
 
@@ -533,7 +533,7 @@ Return ONLY valid JSON in this exact structure:`;
         fileName: req.file.originalname,
         fileSize: req.file.size,
         processingTime,
-        claudeModel: 'claude-3-5-sonnet-20241022',
+        claudeModel: 'claude-3-7-sonnet-20250219',
         success: true
       }
     );

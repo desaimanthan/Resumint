@@ -29,7 +29,11 @@ export function middleware(request: NextRequest) {
   
   // Check if this is a subdomain (not localhost or main domain)
   // For localhost development, we expect format: subdomain.localhost
-  if (parts.length >= 2 && parts[1] === 'localhost' && parts[0] !== 'www' && parts[0] !== 'localhost') {
+  // For Vercel production, we expect format: subdomain.resumint-xi.vercel.app
+  const isLocalSubdomain = parts.length >= 2 && parts[1] === 'localhost' && parts[0] !== 'www' && parts[0] !== 'localhost'
+  const isVercelSubdomain = parts.length >= 4 && parts[1] === 'resumint-xi' && parts[2] === 'vercel' && parts[3] === 'app' && parts[0] !== 'www' && parts[0] !== 'resumint-xi'
+  
+  if (isLocalSubdomain || isVercelSubdomain) {
     const subdomain = parts[0]
     console.log('  🎯 Subdomain detected:', subdomain)
     
@@ -39,11 +43,19 @@ export function middleware(request: NextRequest) {
       return NextResponse.next()
     }
     
-    // Rewrite subdomain to portfolio route
-    const newPath = `/portfolio/${subdomain}`
-    console.log('  🔄 Rewriting to:', newPath)
-    url.pathname = newPath
-    return NextResponse.rewrite(url)
+    // Handle different paths for subdomain
+    if (url.pathname === '/password') {
+      // Rewrite password page
+      url.pathname = `/portfolio/${subdomain}/password`
+      console.log('  🔄 Rewriting password page to:', url.pathname)
+      return NextResponse.rewrite(url)
+    } else {
+      // Rewrite root and other paths to portfolio
+      const originalPath = url.pathname === '/' ? '' : url.pathname
+      url.pathname = `/portfolio/${subdomain}${originalPath}`
+      console.log('  🔄 Rewriting to:', url.pathname)
+      return NextResponse.rewrite(url)
+    }
   }
 
   console.log('  ⏭️ No subdomain detected, continuing')

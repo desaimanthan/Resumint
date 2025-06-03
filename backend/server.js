@@ -8,6 +8,7 @@ const connectDB = require('./config/database');
 // Import routes
 const authRoutes = require('./routes/auth');
 const resumeRoutes = require('./routes/resume');
+const coverLetterRoutes = require('./routes/cover-letter');
 const companiesRoutes = require('./routes/companies');
 const aiRoutes = require('./routes/ai');
 const publishedRoutes = require('./routes/published');
@@ -24,7 +25,10 @@ app.use(helmet());
 // CORS configuration - Fixed frontend port
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://your-production-domain.com'] 
+    ? [
+        process.env.FRONTEND_URL || 'https://your-frontend-domain.vercel.app',
+        /^https:\/\/.*\.vercel\.app$/  // Allow any Vercel app
+      ]
     : [
         'http://localhost:8080',  // Fixed frontend port
         /^http:\/\/.*\.localhost:8080$/  // Allow any subdomain of localhost:8080
@@ -58,6 +62,7 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/resumes', resumeRoutes);
+app.use('/api/cover-letters', coverLetterRoutes);
 app.use('/api/companies', companiesRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/published', publishedRoutes);

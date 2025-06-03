@@ -143,14 +143,14 @@ Good keyword examples:
 ## API Rate Limits
 
 Claude API has rate limits. The current implementation uses:
-- **Model**: `claude-3-haiku-20240307` (fast and cost-effective)
+- **Model**: `claude-3-7-sonnet-20250219` (latest and most capable)
 - **Max Tokens**: 200 (sufficient for summaries)
 - **Timeout**: Reasonable timeout for user experience
 
 ## Cost Considerations
 
-- Claude Haiku is the most cost-effective model
-- Each summary generation costs approximately $0.001-0.002
+- Claude 3.7 Sonnet provides the best balance of capability and cost
+- Each summary generation costs approximately $0.003-0.015 depending on length
 - Consider implementing usage limits for production
 
 ## Troubleshooting

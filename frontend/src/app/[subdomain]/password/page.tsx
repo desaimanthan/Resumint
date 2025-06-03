@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react'
 
-export default function PasswordPage() {
+export default function SubdomainPasswordPage() {
   const { subdomain } = useParams()
   const router = useRouter()
   const [password, setPassword] = useState('')
@@ -44,8 +44,8 @@ export default function PasswordPage() {
         sessionStorage.setItem(`portfolio_access_${subdomain}`, 'authenticated')
         sessionStorage.setItem(`portfolio_data_${subdomain}`, JSON.stringify(data.data.resume))
         
-        // Redirect to the portfolio page
-        router.push(`/portfolio/${subdomain}`)
+        // Redirect back to the subdomain (root level)
+        window.location.href = `${window.location.protocol}//${subdomain}.resumint-xi.vercel.app`
       } else {
         setError(data.message || 'Invalid password')
       }

@@ -21,7 +21,7 @@ interface PortfolioResumeData extends ResumeData {
   }
 }
 
-export default function PortfolioPage() {
+export default function SubdomainPortfolioPage() {
   const { subdomain } = useParams()
   const router = useRouter()
   const [resumeData, setResumeData] = useState<PortfolioResumeData | null>(null)
@@ -60,7 +60,7 @@ export default function PortfolioPage() {
         body: JSON.stringify(analyticsData)
       })
 
-      console.log('Analytics tracked for session')
+      console.log('Analytics tracked for subdomain session')
       
     } catch (error) {
       // Silently fail analytics tracking

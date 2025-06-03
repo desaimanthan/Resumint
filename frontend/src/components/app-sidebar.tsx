@@ -1,6 +1,6 @@
 "use client"
 
-import { Calendar, Home, Inbox, Search, Settings, User, FileText, BarChart3, HelpCircle, LogOut, DollarSign, Zap } from "lucide-react"
+import { Calendar, Home, Inbox, Search, Settings, User, FileText, BarChart3, HelpCircle, LogOut, DollarSign, Zap, Mail, MessageSquare } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
@@ -34,14 +34,14 @@ const items = [
     icon: FileText,
   },
   {
-    title: "AI Insights",
-    url: "/ai-insights",
-    icon: BarChart3,
+    title: "Cover Letter",
+    url: "/cover-letter",
+    icon: Mail,
   },
   {
-    title: "Templates",
-    url: "/templates",
-    icon: Inbox,
+    title: "Mock Interview",
+    url: "/mock-interview",
+    icon: MessageSquare,
   },
   {
     title: "Account",

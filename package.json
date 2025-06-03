@@ -4,8 +4,7 @@
   "description": "Resume intelligence application with Next.js frontend and Express backend",
   "main": "index.js",
   "scripts": {
-    "dev": "npm run kill-ports && concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
-    "kill-ports": "npx kill-port 8080 5001",
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
     "dev:frontend": "cd frontend && npm run dev",
     "dev:backend": "cd backend && npm run dev",
     "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
@@ -16,7 +15,6 @@
   "author": "Manthan Desai",
   "license": "MIT",
   "devDependencies": {
-    "concurrently": "^8.2.2",
-    "kill-port": "^2.0.1"
+    "concurrently": "^8.2.2"
   }
 }

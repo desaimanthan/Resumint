@@ -80,7 +80,7 @@ export function CompanyAutocomplete({
         return []
       }
 
-      const response = await fetch(`http://localhost:5001/api/companies/search?q=${encodeURIComponent(query)}`)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'}/companies/search?q=${encodeURIComponent(query)}`)
       
       if (!response.ok) {
         throw new Error(`API Error: ${response.status} ${response.statusText}`)
