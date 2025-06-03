@@ -20,3 +20,7 @@
 {"timestamp":"2025-06-03T13:58:01.958Z","ip":"::1","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36","count":1,"type":"refresh_attempt"}
 {"timestamp":"2025-06-03T15:18:06.615Z","ip":"::1","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36","count":1,"type":"refresh_attempt"}
 {"timestamp":"2025-06-03T15:18:06.619Z","ip":"::1","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36","count":2,"type":"refresh_attempt"}
+{"timestamp":"2025-06-03T16:29:59.017Z","ip":"::1","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36","count":1,"type":"refresh_attempt"}
+{"timestamp":"2025-06-03T17:05:20.965Z","ip":"::1","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36","count":1,"type":"refresh_attempt"}
+{"timestamp":"2025-06-03T17:05:20.967Z","ip":"::1","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36","count":2,"type":"refresh_attempt"}
+{"timestamp":"2025-06-03T17:20:39.215Z","ip":"::1","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36","count":1,"type":"refresh_attempt"}

@@ -9,6 +9,7 @@ const connectDB = require('./config/database');
 const authRoutes = require('./routes/auth');
 const resumeRoutes = require('./routes/resume');
 const coverLetterRoutes = require('./routes/cover-letter');
+const mockInterviewRoutes = require('./routes/mock-interview');
 const companiesRoutes = require('./routes/companies');
 const aiRoutes = require('./routes/ai');
 const publishedRoutes = require('./routes/published');
@@ -65,6 +66,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/resumes', resumeRoutes);
 app.use('/api/cover-letters', coverLetterRoutes);
+app.use('/api/mock-interviews', mockInterviewRoutes);
 app.use('/api/companies', companiesRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/published', publishedRoutes);
