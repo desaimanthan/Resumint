@@ -419,7 +419,18 @@ export default function CoverLetterPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => window.open(`http://${coverLetter.publication?.subdomain}.localhost:8080`, '_blank')}
+                      onClick={() => {
+                        const hostname = window.location.hostname
+                        const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1'
+                        let url
+                        if (isLocalhost) {
+                          url = `http://${coverLetter.publication?.subdomain}.localhost:8080`
+                        } else {
+                          const baseDomain = hostname.replace(/^www\./, '')
+                          url = `http://${coverLetter.publication?.subdomain}.${baseDomain}`
+                        }
+                        window.open(url, '_blank')
+                      }}
                     >
                       <Globe className="h-4 w-4 mr-1" />
                       View Live

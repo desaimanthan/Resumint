@@ -247,7 +247,26 @@ function AnalyticsForm() {
   }
 
   const isPublished = publicationData?.isPublished
-  const publishedUrl = isPublished ? `${publicationData.subdomain}.localhost:8080` : null
+  
+  // Generate the correct published URL based on environment
+  const getPublishedUrl = () => {
+    if (!isPublished || !publicationData?.subdomain) return null
+    
+    // Check if we're in development or production
+    const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost'
+    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1'
+    
+    if (isLocalhost) {
+      // In development, use localhost with port
+      return `${publicationData.subdomain}.localhost:8080`
+    } else {
+      // In production, use the proper domain without www
+      const baseDomain = hostname.replace(/^www\./, '') // Remove www. if present
+      return `${publicationData.subdomain}.${baseDomain}`
+    }
+  }
+  
+  const publishedUrl = getPublishedUrl()
 
   if (loading) {
     return (
