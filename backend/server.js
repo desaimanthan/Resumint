@@ -30,6 +30,7 @@ app.use(cors({
         process.env.FRONTEND_URL || 'https://your-frontend-domain.vercel.app',
         /^https:\/\/.*\.vercel\.app$/,  // Allow any Vercel app
         'https://resumint.site',  // Allow main custom domain
+        'https://www.resumint.site',  // Allow www subdomain
         /^https:\/\/.*\.resumint\.site$/  // Allow any subdomain of resumint.site
       ]
     : [
