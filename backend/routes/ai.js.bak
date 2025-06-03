@@ -89,18 +89,12 @@ async function logAIUsage(userId, resumeId, operation, tokenData, metadata) {
       if (!user.aiUsageStats) {
         user.aiUsageStats = {
           totalTokensUsed: 0,
-          totalCostUSD: 0,
           pdfParsingTokens: 0,
           optimizationTokens: 0,
           resumesParsed: 0,
           lastResetDate: new Date(),
           monthlyUsage: []
         };
-      }
-      
-      // Ensure totalCostUSD field exists
-      if (typeof user.aiUsageStats.totalCostUSD !== 'number') {
-        user.aiUsageStats.totalCostUSD = 0;
       }
       
       user.aiUsageStats.totalTokensUsed += tokenData.inputTokens + tokenData.outputTokens;
@@ -261,36 +255,11 @@ Create a compelling 2-3 sentence professional summary that incorporates these ke
       throw new Error('Generated summary is too long');
     }
 
-    // Log AI usage
-    const tokenUsage = {
-      inputTokens: response.usage.input_tokens,
-      outputTokens: response.usage.output_tokens
-    };
-
-    const usageResult = await logAIUsage(
-      req.user.id,
-      resumeId,
-      "summary_generation",
-      tokenUsage,
-      {
-        keywords: keywords,
-        claudeModel: "claude-3-5-sonnet-20241022",
-        success: true,
-        summaryLength: generatedSummary.length
-      }
-    );
-
     res.json({
       success: true,
       data: {
         summary: generatedSummary,
-        keywords: keywords,
-        usage: {
-          inputTokens: tokenUsage.inputTokens,
-          outputTokens: tokenUsage.outputTokens,
-          totalTokens: tokenUsage.inputTokens + tokenUsage.outputTokens,
-          estimatedCost: usageResult.cost
-        }
+        keywords: keywords
       }
     });
 

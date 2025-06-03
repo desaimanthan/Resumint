@@ -16,7 +16,7 @@ const aiUsageLogSchema = new mongoose.Schema({
   operation: { 
     type: String, 
     required: true,
-    enum: ['pdf_parsing', 'optimization', 'enhancement'],
+    enum: ['pdf_parsing', 'optimization', 'enhancement', 'summary_generation'],
     index: true
   },
   model: { 

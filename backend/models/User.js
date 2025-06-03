@@ -62,6 +62,7 @@ const userSchema = new mongoose.Schema({
   // AI Usage Statistics
   aiUsageStats: {
     totalTokensUsed: { type: Number, default: 0 },
+    totalCostUSD: { type: Number, default: 0 },
     pdfParsingTokens: { type: Number, default: 0 },
     optimizationTokens: { type: Number, default: 0 },
     resumesParsed: { type: Number, default: 0 },
@@ -69,7 +70,45 @@ const userSchema = new mongoose.Schema({
     monthlyUsage: [{
       month: { type: String }, // YYYY-MM format
       tokens: { type: Number, default: 0 },
+      cost: { type: Number, default: 0 },
       operations: { type: Number, default: 0 }
+    }]
+  },
+  
+  // Usage Limits and Billing
+  usageLimits: {
+    monthlyTokenLimit: { type: Number, default: 100000 }, // 100K tokens per month
+    monthlyCostLimit: { type: Number, default: 50.0 }, // $50 per month
+    dailyTokenLimit: { type: Number, default: 10000 }, // 10K tokens per day
+    dailyCostLimit: { type: Number, default: 5.0 }, // $5 per day
+    isLimitEnabled: { type: Boolean, default: true },
+    alertThresholds: {
+      tokenWarning: { type: Number, default: 0.8 }, // 80% of limit
+      costWarning: { type: Number, default: 0.8 } // 80% of limit
+    }
+  },
+  
+  // Billing Information
+  billing: {
+    plan: { type: String, enum: ['free', 'basic', 'premium'], default: 'free' },
+    subscriptionId: { type: String, default: null },
+    billingCycle: { type: String, enum: ['monthly', 'yearly'], default: 'monthly' },
+    nextBillingDate: { type: Date, default: null },
+    paymentMethod: {
+      type: { type: String, enum: ['card', 'paypal'], default: null },
+      last4: { type: String, default: null },
+      brand: { type: String, default: null }
+    },
+    invoiceHistory: [{
+      invoiceId: { type: String },
+      amount: { type: Number },
+      currency: { type: String, default: 'USD' },
+      status: { type: String, enum: ['paid', 'pending', 'failed'], default: 'pending' },
+      billingPeriod: {
+        start: { type: Date },
+        end: { type: Date }
+      },
+      createdAt: { type: Date, default: Date.now }
     }]
   }
 }, {
