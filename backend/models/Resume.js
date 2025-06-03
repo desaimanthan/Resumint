@@ -126,7 +126,6 @@ const resumeSchema = new mongoose.Schema({
   // Metadata
   isDraft: { type: Boolean, default: true },
   lastSaved: { type: Date, default: Date.now },
-  completionPercentage: { type: Number, default: 0, min: 0, max: 100 },
   templateId: { type: String, default: 'default' },
   title: { type: String, trim: true, default: 'My Resume' },
   
@@ -189,53 +188,11 @@ resumeSchema.virtual('personalInfo.fullName').get(function() {
   return '';
 });
 
-// Method to calculate completion percentage
-resumeSchema.methods.calculateCompletionPercentage = function() {
-  let completed = 0;
-  const totalSections = 8; // Personal info, work, education, skills, summary, etc.
 
-  // Personal info (required)
-  if (this.personalInfo.firstName && this.personalInfo.lastName && this.personalInfo.email) {
-    completed += 1;
-  }
 
-  // Work history (at least one entry)
-  if (this.workHistory && this.workHistory.length > 0) {
-    completed += 1;
-  }
-
-  // Education (at least one entry)
-  if (this.education && this.education.length > 0) {
-    completed += 1;
-  }
-
-  // Skills (at least 3 skills)
-  if (this.skills && this.skills.length >= 3) {
-    completed += 1;
-  }
-
-  // Summary
-  if (this.summary && this.summary.length > 50) {
-    completed += 1;
-  }
-
-  // Optional sections count as partial completion
-  let optionalCompleted = 0;
-  if (this.certifications && this.certifications.length > 0) optionalCompleted += 1;
-  if (this.projects && this.projects.length > 0) optionalCompleted += 1;
-  if (this.optionalSections.languages && this.optionalSections.languages.length > 0) optionalCompleted += 1;
-
-  // Add partial credit for optional sections
-  completed += Math.min(optionalCompleted / 3, 3);
-
-  this.completionPercentage = Math.round((completed / totalSections) * 100);
-  return this.completionPercentage;
-};
-
-// Pre-save middleware to update completion percentage
+// Pre-save middleware to update last saved timestamp
 resumeSchema.pre('save', function(next) {
   this.lastSaved = new Date();
-  this.calculateCompletionPercentage();
   next();
 });
 

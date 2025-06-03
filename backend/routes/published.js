@@ -28,40 +28,75 @@ function parseUserAgent(userAgent) {
   };
 }
 
-// Helper function to get geolocation from IP (placeholder - you'd use a real service)
+// Helper function to return default location
+function getDefaultLocation() {
+  return {
+    country: 'Unknown',
+    countryCode: 'XX',
+    region: 'Unknown',
+    city: 'Unknown',
+    timezone: 'UTC',
+    coordinates: {
+      lat: 0,
+      lng: 0
+    }
+  };
+}
+
+// Helper function to get geolocation from IP using ip-api.com (free service)
 async function getLocationFromIP(ip) {
-  // In production, you'd use a service like ipapi.co, MaxMind, or similar
-  // For now, returning a placeholder
   try {
-    // Example using ipapi.co (you'd need to implement this)
-    // const response = await fetch(`http://ipapi.co/${ip}/json/`);
-    // const data = await response.json();
+    // Skip localhost/private IPs
+    if (!ip || ip === '127.0.0.1' || ip === '::1' || ip.startsWith('192.168.') || ip.startsWith('10.') || ip.startsWith('172.')) {
+      // For localhost/development, return a default location based on your location
+      return {
+        country: 'India',
+        countryCode: 'IN',
+        region: 'Maharashtra',
+        city: 'Mumbai',
+        timezone: 'Asia/Kolkata',
+        coordinates: {
+          lat: 19.0760,
+          lng: 72.8777
+        }
+      };
+    }
+
+    // Use ip-api.com for real IP addresses (free tier: 1000 requests/month)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
     
-    // Placeholder data
-    return {
-      country: 'Unknown',
-      countryCode: 'XX',
-      region: 'Unknown',
-      city: 'Unknown',
-      timezone: 'UTC',
-      coordinates: {
-        lat: 0,
-        lng: 0
-      }
-    };
+    const response = await fetch(`http://ip-api.com/json/${ip}?fields=status,message,country,countryCode,region,regionName,city,timezone,lat,lon`, {
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    if (data.status === 'success') {
+      return {
+        country: data.country || 'Unknown',
+        countryCode: data.countryCode || 'XX',
+        region: data.regionName || data.region || 'Unknown',
+        city: data.city || 'Unknown',
+        timezone: data.timezone || 'UTC',
+        coordinates: {
+          lat: data.lat || 0,
+          lng: data.lon || 0
+        }
+      };
+    } else {
+      console.log('IP geolocation failed:', data.message);
+      return getDefaultLocation();
+    }
   } catch (error) {
-    console.error('Error getting location from IP:', error);
-    return {
-      country: 'Unknown',
-      countryCode: 'XX',
-      region: 'Unknown',
-      city: 'Unknown',
-      timezone: 'UTC',
-      coordinates: {
-        lat: 0,
-        lng: 0
-      }
-    };
+    console.error('Error getting location from IP:', error.message);
+    return getDefaultLocation();
   }
 }
 
@@ -179,47 +214,7 @@ router.post('/:subdomain/verify-password', async (req, res) => {
   }
 });
 
-// Track analytics for published resume (simplified version)
-router.post('/:subdomain/analytics', async (req, res) => {
-  try {
-    const { subdomain } = req.params;
-    const { userAgent, referrer } = req.body;
-    
-    const resume = await Resume.findOne({ 
-      'publication.subdomain': subdomain,
-      'publication.isPublished': true
-    });
-
-    if (!resume) {
-      return res.status(404).json({
-        success: false,
-        message: 'Resume not found'
-      });
-    }
-
-    // Simple analytics tracking
-    resume.publication.analytics.totalViews += 1;
-    resume.publication.analytics.lastViewed = new Date();
-    
-    // For simplicity, count each visit as unique for now
-    resume.publication.analytics.uniqueVisitors += 1;
-
-    await resume.save();
-
-    res.json({
-      success: true,
-      message: 'Analytics tracked successfully'
-    });
-  } catch (error) {
-    console.error('Error tracking analytics:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to track analytics'
-    });
-  }
-});
-
-// Track visit to published resume
+// Track visit to published resume (UNIFIED ANALYTICS SYSTEM)
 router.post('/:subdomain/track-visit', async (req, res) => {
   try {
     const { subdomain } = req.params;
@@ -252,6 +247,8 @@ router.post('/:subdomain/track-visit', async (req, res) => {
     const deviceInfo = parseUserAgent(userAgent);
     const location = await getLocationFromIP(ipAddress);
 
+    console.log(`📍 IP: ${ipAddress} -> Location: ${location.city}, ${location.country} (${location.countryCode})`);
+
     // Check if this is a new visitor
     const existingVisit = await Analytics.findOne({
       resumeId: resume._id,
@@ -259,6 +256,16 @@ router.post('/:subdomain/track-visit', async (req, res) => {
     });
 
     const isNewVisitor = !existingVisit;
+    
+    // Check if this is a new session (within last 30 minutes)
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+    const recentVisit = await Analytics.findOne({
+      resumeId: resume._id,
+      visitorId: visitorId,
+      timestamp: { $gte: thirtyMinutesAgo }
+    });
+    
+    const isNewSession = !recentVisit;
 
     // Create analytics entry
     const analyticsEntry = new Analytics({
@@ -290,19 +297,20 @@ router.post('/:subdomain/track-visit', async (req, res) => {
 
     await analyticsEntry.save();
 
-    // Update resume analytics summary
-    resume.publication.analytics.totalViews += 1;
-    resume.publication.analytics.lastViewed = new Date();
+    // Note: We no longer update resume.publication.analytics here
+    // All analytics are now handled through the Analytics collection
+    // The publication-status endpoint will calculate analytics from the Analytics collection
     
-    if (isNewVisitor) {
-      resume.publication.analytics.uniqueVisitors += 1;
+    if (isNewSession) {
+      console.log(`📊 New session tracked: Views +1, New visitor: ${isNewVisitor}`);
+    } else {
+      console.log(`🔄 Existing session, not counting view`);
     }
-
-    await resume.save();
 
     res.json({
       success: true,
-      message: 'Visit tracked successfully'
+      message: 'Visit tracked successfully',
+      location: location // Return location for debugging
     });
   } catch (error) {
     console.error('Error tracking visit:', error);
@@ -337,13 +345,16 @@ router.get('/:subdomain/analytics/summary', async (req, res) => {
       timestamp: { $gte: fiveMinutesAgo }
     });
 
+    // Get analytics from unified system
+    const summary = await Analytics.getAnalyticsSummary(resume._id, 365);
+
     res.json({
       success: true,
       data: {
-        totalViews: resume.publication.analytics.totalViews,
-        uniqueVisitors: resume.publication.analytics.uniqueVisitors,
+        totalViews: summary.totalViews || 0,
+        uniqueVisitors: summary.uniqueVisitors || 0,
         activeVisitors,
-        lastViewed: resume.publication.analytics.lastViewed
+        lastViewed: summary.lastViewed || null
       }
     });
   } catch (error) {

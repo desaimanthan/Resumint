@@ -10,7 +10,7 @@ router.get('/', authenticateToken, async (req, res) => {
   try {
     const resumes = await Resume.find({ userId: req.user.id })
       .sort({ updatedAt: -1 })
-      .select('title isDraft completionPercentage lastSaved createdAt updatedAt');
+      .select('title isDraft lastSaved createdAt updatedAt publication');
     
     res.json({
       success: true,
@@ -170,8 +170,7 @@ router.patch('/:id/autosave', authenticateToken, async (req, res) => {
     res.json({
       success: true,
       data: { 
-        lastSaved: resume.lastSaved,
-        completionPercentage: resume.completionPercentage
+        lastSaved: resume.lastSaved
       }
     });
   } catch (error) {
@@ -346,7 +345,6 @@ router.get('/:id/analytics', authenticateToken, async (req, res) => {
     }
 
     const analytics = {
-      completionPercentage: resume.completionPercentage,
       sectionsCompleted: {
         personalInfo: !!(resume.personalInfo.firstName && resume.personalInfo.lastName && resume.personalInfo.email),
         workHistory: resume.workHistory.length > 0,
@@ -541,7 +539,7 @@ router.post('/:id/publish', authenticateToken, async (req, res) => {
       ogImage: seoMetadata.ogImage || resume.personalInfo.profilePhoto
     };
 
-    // Update publication settings
+    // Update publication settings and draft status
     resume.publication = {
       isPublished: true,
       subdomain,
@@ -555,6 +553,9 @@ router.post('/:id/publish', authenticateToken, async (req, res) => {
         lastViewed: null
       }
     };
+    
+    // Mark as no longer a draft when published
+    resume.isDraft = false;
 
     console.log('💾 Saving resume with publication data:', resume.publication);
     await resume.save();
@@ -679,6 +680,9 @@ router.delete('/:id/unpublish', authenticateToken, async (req, res) => {
     resume.publication.isPublished = false;
     resume.publication.subdomain = null;
     resume.publication.publishedAt = null;
+    
+    // Mark as draft when unpublished
+    resume.isDraft = true;
     
     await resume.save();
 
