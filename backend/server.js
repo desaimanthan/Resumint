@@ -27,7 +27,9 @@ app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
     ? [
         process.env.FRONTEND_URL || 'https://your-frontend-domain.vercel.app',
-        /^https:\/\/.*\.vercel\.app$/  // Allow any Vercel app
+        /^https:\/\/.*\.vercel\.app$/,  // Allow any Vercel app
+        'https://resumint.site',  // Allow main custom domain
+        /^https:\/\/.*\.resumint\.site$/  // Allow any subdomain of resumint.site
       ]
     : [
         'http://localhost:8080',  // Fixed frontend port

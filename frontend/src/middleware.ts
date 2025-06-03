@@ -30,12 +30,18 @@ export function middleware(request: NextRequest) {
   // Check if this is a subdomain (not localhost or main domain)
   // For localhost development, we expect format: subdomain.localhost
   // For Vercel production, we expect format: subdomain.resumint-xi.vercel.app
+  // For custom domain, we expect format: subdomain.resumint.site
   const isLocalSubdomain = parts.length >= 2 && parts[1] === 'localhost' && parts[0] !== 'www' && parts[0] !== 'localhost'
   const isVercelSubdomain = parts.length >= 4 && parts[1] === 'resumint-xi' && parts[2] === 'vercel' && parts[3] === 'app' && parts[0] !== 'www' && parts[0] !== 'resumint-xi'
+  const isCustomDomainSubdomain = parts.length >= 3 && parts[1] === 'resumint' && parts[2] === 'site' && parts[0] !== 'www' && parts[0] !== 'resumint'
   
-  if (isLocalSubdomain || isVercelSubdomain) {
+  if (isLocalSubdomain || isVercelSubdomain || isCustomDomainSubdomain) {
     const subdomain = parts[0]
     console.log('  🎯 Subdomain detected:', subdomain)
+    console.log('  🔍 Full hostname parts:', parts)
+    console.log('  📍 isLocalSubdomain:', isLocalSubdomain)
+    console.log('  📍 isVercelSubdomain:', isVercelSubdomain)
+    console.log('  📍 isCustomDomainSubdomain:', isCustomDomainSubdomain)
     
     // Skip if already on portfolio route to avoid infinite redirects
     if (url.pathname.startsWith('/portfolio/')) {
