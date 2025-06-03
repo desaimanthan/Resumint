@@ -83,10 +83,42 @@ export default function CoverLetterResultsPage({ params }: { params: Promise<{ i
 
   const handleDownloadPDF = async () => {
     try {
-      // TODO: Implement PDF generation
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cover-letters/${resolvedParams.id}/download`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to download PDF')
+      }
+
+      // Get the filename from the response headers
+      const contentDisposition = response.headers.get('content-disposition')
+      let filename = 'cover-letter.pdf'
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/)
+        if (filenameMatch) {
+          filename = filenameMatch[1]
+        }
+      }
+
+      // Create blob and download
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.style.display = 'none'
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
       toast({
-        title: 'Coming Soon',
-        description: 'PDF download feature will be available soon',
+        title: 'Success',
+        description: 'PDF downloaded successfully',
       })
     } catch (error) {
       toast({

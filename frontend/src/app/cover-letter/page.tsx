@@ -47,6 +47,7 @@ interface CoverLetter {
   _id: string
   title: string
   isDraft: boolean
+  generatedContent?: string
   lastSaved: string
   createdAt: string
   updatedAt: string
@@ -166,6 +167,55 @@ export default function CoverLetterPage() {
       toast({
         title: 'Error',
         description: 'Failed to delete cover letter',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  // Download cover letter as PDF
+  const handleDownloadPDF = async (coverLetterId: string, title: string) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cover-letters/${coverLetterId}/download`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to download PDF')
+      }
+
+      // Get the filename from the response headers
+      const contentDisposition = response.headers.get('content-disposition')
+      let filename = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/)
+        if (filenameMatch) {
+          filename = filenameMatch[1]
+        }
+      }
+
+      // Create blob and download
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.style.display = 'none'
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      toast({
+        title: 'Success',
+        description: 'PDF downloaded successfully',
+      })
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to download PDF',
         variant: 'destructive',
       })
     }
@@ -292,9 +342,9 @@ export default function CoverLetterPage() {
                   <div>
                     <div className="flex items-center gap-3">
                       <h3 className="text-lg font-semibold">{toTitleCase(coverLetter.title)}</h3>
-                      {coverLetter.publication?.isPublished ? (
+                      {!coverLetter.isDraft && coverLetter.generatedContent ? (
                         <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                          Published
+                          Generated
                         </span>
                       ) : (
                         <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
@@ -373,6 +423,17 @@ export default function CoverLetterPage() {
                     >
                       <Globe className="h-4 w-4 mr-1" />
                       View Live
+                    </Button>
+                  )}
+                  
+                  {!coverLetter.isDraft && coverLetter.generatedContent && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDownloadPDF(coverLetter._id, coverLetter.title)}
+                    >
+                      <Download className="h-4 w-4 mr-1" />
+                      Download
                     </Button>
                   )}
                   
