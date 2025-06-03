@@ -1,0 +1,279 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { useAuth } from "@/contexts/AuthContext"
+import { useRouter } from "next/navigation"
+import { useToast } from "@/hooks/use-toast"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
+import { Separator } from "@/components/ui/separator"
+import { 
+  DollarSign, 
+  Zap, 
+  Calendar, 
+  TrendingUp, 
+  AlertTriangle,
+  CreditCard,
+  Download,
+  Settings
+} from "lucide-react"
+import { SimpleSidebar } from "@/components/simple-sidebar"
+
+interface UsageStats {
+  totalUsage: {
+    totalTokensUsed: number
+    totalCostUSD: number
+    resumesParsed: number
+  }
+  currentMonth: {
+    tokens: number
+    cost: number
+    operations: number
+    month: string
+  }
+  limits: {
+    monthlyTokenLimit: number
+    monthlyCostLimit: number
+    dailyTokenLimit: number
+    dailyCostLimit: number
+    isLimitEnabled: boolean
+  }
+  usage: {
+    monthlyTokenPercentage: number
+    monthlyCostPercentage: number
+    isApproachingTokenLimit: boolean
+    isApproachingCostLimit: boolean
+  }
+  billing: {
+    plan: string
+    nextBillingDate?: string
+  }
+}
+
+export default function BillingPage() {
+  const { user, apiCall } = useAuth()
+  const router = useRouter()
+  const { toast } = useToast()
+  const [usageStats, setUsageStats] = useState<UsageStats | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (user) {
+      const fetchUsageStats = async () => {
+        try {
+          const data = await apiCall('/ai/usage-stats')
+          setUsageStats(data.data)
+        } catch (error) {
+          console.error('Failed to fetch usage stats:', error)
+          toast({
+            title: 'Error',
+            description: 'Failed to load usage statistics',
+            variant: 'destructive',
+          })
+        } finally {
+          setLoading(false)
+        }
+      }
+
+      fetchUsageStats()
+    } else {
+      setLoading(false)
+    }
+  }, [user, toast, apiCall])
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 4
+    }).format(amount)
+  }
+
+  const formatNumber = (num: number) => {
+    return new Intl.NumberFormat('en-US').format(num)
+  }
+
+  const getPlanBadgeVariant = (plan: string) => {
+    switch (plan) {
+      case 'premium': return 'default'
+      case 'basic': return 'secondary'
+      default: return 'outline'
+    }
+  }
+
+  if (loading) {
+    return (
+      <SimpleSidebar title="Usage & Billing">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading usage statistics...</p>
+          </div>
+        </div>
+      </SimpleSidebar>
+    )
+  }
+
+  if (!usageStats) {
+    return (
+      <SimpleSidebar title="Usage & Billing">
+        <div className="text-center">
+          <p className="text-muted-foreground">Unable to load usage statistics</p>
+          <Button onClick={() => window.location.reload()} className="mt-4">
+            Try Again
+          </Button>
+        </div>
+      </SimpleSidebar>
+    )
+  }
+
+  return (
+    <SimpleSidebar title="Usage & Billing">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold">Usage & Billing</h1>
+            <p className="text-muted-foreground">
+              Monitor your AI usage and manage your subscription
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant={getPlanBadgeVariant(usageStats.billing.plan)}>
+              {usageStats.billing.plan.charAt(0).toUpperCase() + usageStats.billing.plan.slice(1)} Plan
+            </Badge>
+          </div>
+        </div>
+
+        {/* Warning Alerts */}
+        {(usageStats.usage.isApproachingTokenLimit || usageStats.usage.isApproachingCostLimit) && (
+          <Card className="border-orange-200 bg-orange-50">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-orange-600" />
+                <CardTitle className="text-orange-800">Usage Warning</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 text-sm text-orange-700">
+                {usageStats.usage.isApproachingTokenLimit && (
+                  <p>• You've used {usageStats.usage.monthlyTokenPercentage.toFixed(1)}% of your monthly token limit</p>
+                )}
+                {usageStats.usage.isApproachingCostLimit && (
+                  <p>• You've reached {usageStats.usage.monthlyCostPercentage.toFixed(1)}% of your monthly cost limit</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Current Month Usage */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Tokens This Month</CardTitle>
+              <Zap className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatNumber(usageStats.currentMonth.tokens)}</div>
+              <div className="mt-2">
+                <Progress 
+                  value={usageStats.usage.monthlyTokenPercentage} 
+                  className="h-2"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {usageStats.usage.monthlyTokenPercentage.toFixed(1)}% of {formatNumber(usageStats.limits.monthlyTokenLimit)} limit
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Cost This Month</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatCurrency(usageStats.currentMonth.cost)}</div>
+              <div className="mt-2">
+                <Progress 
+                  value={usageStats.usage.monthlyCostPercentage} 
+                  className="h-2"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {usageStats.usage.monthlyCostPercentage.toFixed(1)}% of {formatCurrency(usageStats.limits.monthlyCostLimit)} limit
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Operations</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{usageStats.currentMonth.operations}</div>
+              <p className="text-xs text-muted-foreground">
+                AI operations this month
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Lifetime</CardTitle>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatCurrency(usageStats.totalUsage.totalCostUSD)}</div>
+              <p className="text-xs text-muted-foreground">
+                {formatNumber(usageStats.totalUsage.totalTokensUsed)} tokens used
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Usage Details */}
+        <div className="grid gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Usage Limits</CardTitle>
+              <CardDescription>
+                Your current plan limits and restrictions
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Monthly Token Limit</span>
+                <span className="font-medium">{formatNumber(usageStats.limits.monthlyTokenLimit)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Monthly Cost Limit</span>
+                <span className="font-medium">{formatCurrency(usageStats.limits.monthlyCostLimit)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Daily Token Limit</span>
+                <span className="font-medium">{formatNumber(usageStats.limits.dailyTokenLimit)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Daily Cost Limit</span>
+                <span className="font-medium">{formatCurrency(usageStats.limits.dailyCostLimit)}</span>
+              </div>
+              <Separator />
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Limits Enabled</span>
+                <Badge variant={usageStats.limits.isLimitEnabled ? "default" : "secondary"}>
+                  {usageStats.limits.isLimitEnabled ? "Yes" : "No"}
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </SimpleSidebar>
+  )
+}
