@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SimpleSidebar } from '@/components/simple-sidebar';
-import { Upload, PenTool } from 'lucide-react';
+import { FileText, Mail, Mic, ArrowRight } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -91,92 +91,199 @@ export default function DashboardPage() {
           </p>
         </div>
         
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Profile Information</CardTitle>
-                <CardDescription>Your account details</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <p><strong>Name:</strong> {user.fullName}</p>
-                  <p><strong>Email:</strong> {user.email}</p>
-                  <p><strong>Role:</strong> {user.role}</p>
-                  <p><strong>Member since:</strong> {new Date(user.createdAt).toLocaleDateString()}</p>
-                  {user.lastLogin && (
-                    <p><strong>Last login:</strong> {new Date(user.lastLogin).toLocaleDateString()}</p>
-                  )}
+        {/* Marketing Cards Section */}
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Resume Builder Card */}
+            <Card className="relative overflow-hidden border-2 hover:border-blue-300 transition-all duration-300 hover:shadow-lg group">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-500/10 to-blue-600/20 rounded-bl-full"></div>
+              <CardHeader className="pb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <FileText className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl font-bold text-gray-900">Resume Builder</CardTitle>
+                    <CardDescription className="text-gray-600">AI-Powered Professional Resumes</CardDescription>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Resume Builder</CardTitle>
-                <CardDescription>Create and manage your resumes</CardDescription>
               </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 mb-4">
-                  Start building your professional resume with our AI-powered tools.
+              <CardContent className="space-y-4">
+                <p className="text-gray-700 leading-relaxed">
+                  Create stunning, ATS-friendly resumes with our intelligent builder. Choose from professional templates and get AI-powered suggestions.
                 </p>
-                <Button className="w-full" onClick={() => setShowCreateDialog(true)}>
-                  Create New Resume
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li className="flex items-center space-x-2">
+                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                    <span>Professional templates</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                    <span>ATS optimization</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                    <span>AI content suggestions</span>
+                  </li>
+                </ul>
+                <Button 
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 group-hover:bg-blue-700 transition-colors"
+                  onClick={() => router.push('/resume-builder')}
+                >
+                  Start Building Resume
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>AI Insights</CardTitle>
-                <CardDescription>Get intelligent recommendations</CardDescription>
+            {/* Cover Letter Card */}
+            <Card className="relative overflow-hidden border-2 hover:border-green-300 transition-all duration-300 hover:shadow-lg group">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-green-500/10 to-green-600/20 rounded-bl-full"></div>
+              <CardHeader className="pb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <Mail className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl font-bold text-gray-900">Cover Letter</CardTitle>
+                    <CardDescription className="text-gray-600">Personalized & Compelling</CardDescription>
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 mb-4">
-                  Analyze your resume and get personalized suggestions for improvement.
+              <CardContent className="space-y-4">
+                <p className="text-gray-700 leading-relaxed">
+                  Generate personalized cover letters that complement your resume. Our AI crafts compelling narratives tailored to each job application.
                 </p>
-                <Button className="w-full" variant="outline">
-                  Analyze Resume
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li className="flex items-center space-x-2">
+                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                    <span>Job-specific customization</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                    <span>Professional tone</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                    <span>Instant generation</span>
+                  </li>
+                </ul>
+                <Button 
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 group-hover:bg-green-700 transition-colors"
+                  onClick={() => router.push('/cover-letter')}
+                >
+                  Create Cover Letter
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </CardContent>
             </Card>
-          </div>
 
-          <div className="mt-8">
-            <Card>
-              <CardHeader>
-                <CardTitle>Getting Started</CardTitle>
-                <CardDescription>Welcome to Resumint! Here's how to get started:</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="text-center p-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <span className="text-blue-600 font-bold">1</span>
-                    </div>
-                    <h3 className="font-semibold mb-2">Create Your Profile</h3>
-                    <p className="text-sm text-gray-600">Add your personal information and work experience</p>
+            {/* Mock Interview Card */}
+            <Card className="relative overflow-hidden border-2 hover:border-purple-300 transition-all duration-300 hover:shadow-lg group">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-500/10 to-purple-600/20 rounded-bl-full"></div>
+              <CardHeader className="pb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <Mic className="h-6 w-6 text-purple-600" />
                   </div>
-                  <div className="text-center p-4">
-                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <span className="text-green-600 font-bold">2</span>
-                    </div>
-                    <h3 className="font-semibold mb-2">Build Your Resume</h3>
-                    <p className="text-sm text-gray-600">Use our templates to create professional resumes</p>
-                  </div>
-                  <div className="text-center p-4">
-                    <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <span className="text-purple-600 font-bold">3</span>
-                    </div>
-                    <h3 className="font-semibold mb-2">Get AI Insights</h3>
-                    <p className="text-sm text-gray-600">Optimize your resume with intelligent suggestions</p>
+                  <div>
+                    <CardTitle className="text-xl font-bold text-gray-900">Mock Interview</CardTitle>
+                    <CardDescription className="text-gray-600">AI-Powered Practice Sessions</CardDescription>
                   </div>
                 </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-gray-700 leading-relaxed">
+                  Practice with our AI interviewer and get real-time feedback. Build confidence and improve your interview skills with personalized coaching.
+                </p>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li className="flex items-center space-x-2">
+                    <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
+                    <span>Real-time AI feedback</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
+                    <span>Industry-specific questions</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
+                    <span>Performance analytics</span>
+                  </li>
+                </ul>
+                <Button 
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2.5 group-hover:bg-purple-700 transition-colors"
+                  onClick={() => router.push('/mock-interview')}
+                >
+                  Start Mock Interview
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
               </CardContent>
             </Card>
           </div>
         </div>
       </div>
+
+      {/* Create Resume Dialog */}
+      <AlertDialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Create New Resume</AlertDialogTitle>
+            <AlertDialogDescription>
+              Choose how you'd like to create your resume.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="resume-title">Resume Title</Label>
+              <Input
+                id="resume-title"
+                placeholder="e.g., Software Engineer Resume"
+                value={newResumeTitle}
+                onChange={(e) => setNewResumeTitle(e.target.value)}
+              />
+            </div>
+            <div className="space-y-3">
+              <Label>Creation Method</Label>
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="pdf_upload"
+                    name="creationMethod"
+                    value="pdf_upload"
+                    checked={creationMethod === 'pdf_upload'}
+                    onChange={(e) => setCreationMethod(e.target.value as 'scratch' | 'pdf_upload')}
+                    className="w-4 h-4 text-blue-600"
+                  />
+                  <Label htmlFor="pdf_upload" className="text-sm font-normal">
+                    Upload existing PDF resume (recommended)
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="scratch"
+                    name="creationMethod"
+                    value="scratch"
+                    checked={creationMethod === 'scratch'}
+                    onChange={(e) => setCreationMethod(e.target.value as 'scratch' | 'pdf_upload')}
+                    className="w-4 h-4 text-blue-600"
+                  />
+                  <Label htmlFor="scratch" className="text-sm font-normal">
+                    Start from scratch
+                  </Label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleCreateResume} disabled={isCreating}>
+              {isCreating ? 'Creating...' : 'Create Resume'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </SimpleSidebar>
   );
 }
